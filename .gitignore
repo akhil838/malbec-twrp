@@ -1,0 +1,16 @@
+.DS_Store
+out/
+*.log
+*.tmp
+*.bak
+*.zip
+*.tar
+*.tar.gz
+*.7z
+*.tgz
+*.md
+!README.md
+*design*
+*Design*
+recovery.img
+test_recovery.img

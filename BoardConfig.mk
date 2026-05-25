@@ -1,0 +1,152 @@
+# BoardConfig.mk for Lenovo IdeaTab Pro Gen 2 (malbec / TB390FU)
+# SoC: Qualcomm Snapdragon 8s Gen 4 (SM8735P, board codename: sun)
+# Kernel/DTB source: OnePlus Nord 6 (same SoC)
+
+DEVICE_PATH := device/lenovo/malbec
+
+# Architecture
+TARGET_ARCH := arm64
+TARGET_ARCH_VARIANT := armv9-a
+TARGET_CPU_ABI := arm64-v8a
+TARGET_CPU_VARIANT := generic
+TARGET_CPU_VARIANT_RUNTIME := kryo
+
+TARGET_2ND_ARCH :=
+TARGET_2ND_ARCH_VARIANT :=
+TARGET_2ND_CPU_ABI :=
+TARGET_2ND_CPU_VARIANT :=
+
+# Platform
+TARGET_BOARD_PLATFORM := sun
+TARGET_BOARD_PLATFORM_GPU := qcom-adreno825
+QCOM_BOARD_PLATFORMS += sun
+
+# Bootloader
+TARGET_BOOTLOADER_BOARD_NAME := sun
+TARGET_NO_BOOTLOADER := true
+
+# Kernel - prebuilt from OnePlus Nord 6 (same Snapdragon 8s Gen 4)
+TARGET_PREBUILT_KERNEL := $(DEVICE_PATH)/prebuilt/kernel
+TARGET_PREBUILT_DTB := $(DEVICE_PATH)/prebuilt/dtb.img
+BOARD_PREBUILT_DTBOIMAGE := $(DEVICE_PATH)/prebuilt/dtbo.img
+
+BOARD_BOOT_HEADER_VERSION := 4
+BOARD_MKBOOTIMG_ARGS += --header_version $(BOARD_BOOT_HEADER_VERSION)
+
+# Kernel cmdline (from OnePlus Nord 6 vendor_boot)
+BOARD_KERNEL_CMDLINE := \
+    video=vfb:640x400,bpp=32,memsize=3072000 \
+    log_buf_len=2M \
+    nosoftlockup \
+    console=ttynull \
+    qcom_geni_serial.con_enabled=0 \
+    nohugevmalloc \
+    bootconfig \
+    buildvariant=user
+
+BOARD_KERNEL_BASE := 0x00000000
+BOARD_KERNEL_PAGESIZE := 4096
+BOARD_KERNEL_OFFSET := 0x00008000
+BOARD_RAMDISK_OFFSET := 0x01000000
+BOARD_KERNEL_TAGS_OFFSET := 0x00000100
+BOARD_DTB_OFFSET := 0x01f00000
+
+# Partitions - from fastboot getvar all
+BOARD_FLASH_BLOCK_SIZE := 4096
+
+BOARD_BOOTIMAGE_PARTITION_SIZE := 100663296          # 0x6000000 = 96 MB
+BOARD_RECOVERYIMAGE_PARTITION_SIZE := 104857600      # 0x6400000 = 100 MB
+BOARD_VENDOR_BOOTIMAGE_PARTITION_SIZE := 100663296   # 0x6000000 = 96 MB
+BOARD_DTBOIMG_PARTITION_SIZE := 52428800             # 0x3200000 = 50 MB
+
+# Super partition (dynamic)
+BOARD_SUPER_PARTITION_SIZE := 23622320128            # 0x580000000 ~= 22 GB
+BOARD_SUPER_PARTITION_GROUPS := lenovo_dynamic_partitions
+BOARD_LENOVO_DYNAMIC_PARTITIONS_PARTITION_LIST := system system_ext product vendor vendor_dlkm odm
+BOARD_LENOVO_DYNAMIC_PARTITIONS_SIZE := 23618125824  # super_size - 4MB overhead
+
+# File system
+BOARD_SYSTEMIMAGE_FILE_SYSTEM_TYPE := ext4
+BOARD_VENDORIMAGE_FILE_SYSTEM_TYPE := ext4
+BOARD_PRODUCTIMAGE_FILE_SYSTEM_TYPE := ext4
+BOARD_SYSTEM_EXTIMAGE_FILE_SYSTEM_TYPE := ext4
+
+TARGET_COPY_OUT_VENDOR := vendor
+TARGET_COPY_OUT_PRODUCT := product
+TARGET_COPY_OUT_SYSTEM_EXT := system_ext
+
+# A/B
+AB_OTA_UPDATER := true
+AB_OTA_PARTITIONS += \
+    boot \
+    dtbo \
+    init_boot \
+    odm \
+    product \
+    recovery \
+    system \
+    system_ext \
+    vbmeta \
+    vbmeta_system \
+    vendor \
+    vendor_boot \
+    vendor_dlkm
+
+# Recovery
+BOARD_USES_RECOVERY_AS_BOOT :=
+BOARD_HAS_DEDICATED_RECOVERY_PARTITION := true
+TARGET_RECOVERY_PIXEL_FORMAT := RGBX_8888
+TARGET_USERIMAGES_USE_EXT4 := true
+TARGET_USERIMAGES_USE_F2FS := true
+BOARD_INCLUDE_RECOVERY_DTBO := true
+
+# Init boot (GKI)
+BOARD_USES_GENERIC_KERNEL_IMAGE := true
+BOARD_MOVE_GSI_AVB_KEYS_TO_VENDOR_BOOT := true
+
+# Encryption
+TW_INCLUDE_CRYPTO := true
+TW_INCLUDE_CRYPTO_FBE := true
+TW_INCLUDE_FBE_METADATA_DECRYPT := true
+BOARD_USES_QCOM_FBE_DECRYPTION := true
+PLATFORM_VERSION := 16
+PLATFORM_VERSION_LAST_STABLE := 16
+PLATFORM_SECURITY_PATCH := 2026-04-05
+
+# TWRP Configuration
+TW_THEME := portrait_hdpi
+TW_EXTRA_LANGUAGES := true
+TW_INPUT_BLACKLIST := "hbtp_vm"
+TW_USE_TOOLBOX := true
+TW_INCLUDE_REPACKTOOLS := true
+TW_INCLUDE_RESETPROP := true
+TW_INCLUDE_LIBRESETPROP := true
+TW_EXCLUDE_DEFAULT_USB_INIT := true
+TW_BRIGHTNESS_PATH := "/sys/class/backlight/panel0-backlight/brightness"
+TW_MAX_BRIGHTNESS := 1023
+TW_DEFAULT_BRIGHTNESS := 420
+TW_NO_SCREEN_BLANK := true
+TW_SCREEN_BLANK_ON_BOOT := false
+TW_HAS_EDL_MODE := true
+
+# Display (13" 3.5K = ~2880x1800 or similar)
+TW_Y_OFFSET := 0
+TW_H_OFFSET := 0
+DEVICE_SCREEN_WIDTH := 2880
+DEVICE_SCREEN_HEIGHT := 1800
+
+# USB
+TW_EXCLUDE_DEFAULT_USB_INIT := true
+TARGET_USE_CUSTOM_LUN_FILE_PATH := /config/usb_gadget/g1/functions/mass_storage.usb0/lun.%d/file
+
+# Verified Boot
+BOARD_AVB_ENABLE := true
+BOARD_AVB_MAKE_VBMETA_IMAGE_ARGS += --flags 3
+BOARD_AVB_RECOVERY_KEY_PATH := external/avb/test/data/testkey_rsa4096.pem
+BOARD_AVB_RECOVERY_ALGORITHM := SHA256_RSA4096
+BOARD_AVB_RECOVERY_ROLLBACK_INDEX := 1
+BOARD_AVB_RECOVERY_ROLLBACK_INDEX_LOCATION := 1
+
+# Vendor boot
+BOARD_INCLUDE_DTB_IN_BOOTIMG := true
+BOARD_RAMDISK_USE_LZ4 := true
