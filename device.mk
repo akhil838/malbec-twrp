@@ -1,3 +1,7 @@
+#
+# Copyright (C) 2026 akhil838 (https://github.com/akhil838)
+# SPDX-License-Identifier: GPL-3.0-or-later
+#
 # Device configuration for Lenovo IdeaTab Pro Gen 2 (malbec / TB390FU)
 # SoC: Qualcomm Snapdragon 8s Gen 4 (SM8735P / sun)
 
