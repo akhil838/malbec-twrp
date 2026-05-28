@@ -1,6 +1,6 @@
 # BoardConfig.mk for Lenovo IdeaTab Pro Gen 2 (malbec / TB390FU)
 # SoC: Qualcomm Snapdragon 8s Gen 4 (SM8735P, board codename: sun)
-# Kernel/DTB source: OnePlus Nord 6 (same SoC)
+# Kernel/DTB/DTBO extracted from original TB390FU ROM
 
 DEVICE_PATH := device/lenovo/malbec
 
@@ -25,7 +25,7 @@ QCOM_BOARD_PLATFORMS += sun
 TARGET_BOOTLOADER_BOARD_NAME := sun
 TARGET_NO_BOOTLOADER := true
 
-# Kernel - prebuilt from OnePlus Nord 6 (same Snapdragon 8s Gen 4)
+# Kernel - extracted from original TB390FU ROM
 TARGET_PREBUILT_KERNEL := $(DEVICE_PATH)/prebuilt/kernel
 TARGET_PREBUILT_DTB := $(DEVICE_PATH)/prebuilt/dtb.img
 BOARD_PREBUILT_DTBOIMAGE := $(DEVICE_PATH)/prebuilt/dtbo.img
@@ -33,16 +33,10 @@ BOARD_PREBUILT_DTBOIMAGE := $(DEVICE_PATH)/prebuilt/dtbo.img
 BOARD_BOOT_HEADER_VERSION := 4
 BOARD_MKBOOTIMG_ARGS += --header_version $(BOARD_BOOT_HEADER_VERSION)
 
-# Kernel cmdline (from OnePlus Nord 6 vendor_boot)
+# Kernel cmdline (from original TB390FU vendor_boot)
 BOARD_KERNEL_CMDLINE := \
     video=vfb:640x400,bpp=32,memsize=3072000 \
-    log_buf_len=2M \
-    nosoftlockup \
-    console=ttynull \
-    qcom_geni_serial.con_enabled=0 \
-    nohugevmalloc \
-    bootconfig \
-    buildvariant=user
+    bootconfig
 
 BOARD_KERNEL_BASE := 0x00000000
 BOARD_KERNEL_PAGESIZE := 4096
@@ -57,7 +51,7 @@ BOARD_FLASH_BLOCK_SIZE := 4096
 BOARD_BOOTIMAGE_PARTITION_SIZE := 100663296          # 0x6000000 = 96 MB
 BOARD_RECOVERYIMAGE_PARTITION_SIZE := 104857600      # 0x6400000 = 100 MB
 BOARD_VENDOR_BOOTIMAGE_PARTITION_SIZE := 100663296   # 0x6000000 = 96 MB
-BOARD_DTBOIMG_PARTITION_SIZE := 52428800             # 0x3200000 = 50 MB
+BOARD_DTBOIMG_PARTITION_SIZE := 50331648             # 0x3000000 = 48 MB
 
 # Super partition (dynamic)
 BOARD_SUPER_PARTITION_SIZE := 23622320128            # 0x580000000 ~= 22 GB
