@@ -74,6 +74,41 @@ else
     echo "events.cpp already patched"
 fi
 
+# Step 3c: Patch slot B logical partition fallback
+# Virtual A/B: slot B mapper devices may not exist.
+# Replace the failing block with a fallback to _a suffix.
+PARTMGR="$TWRP_DIR/bootable/recovery/partitionmanager.cpp"
+if ! grep -q "slot_fallback" "$PARTMGR"; then
+    python3 -c "
+import re
+with open('$PARTMGR', 'r') as f:
+    src = f.read()
+old = '''    if (!fs_mgr_update_logical_partition(&fstabEntry)) {
+        LOGINFO(\"unable to update logical partition: %s\\\\n\", twrpPart->Get_Mount_Point().c_str());
+        return false;
+    }'''
+new = '''    /* slot_fallback */
+    if (!fs_mgr_update_logical_partition(&fstabEntry)) {
+        // Try alternate slot suffix (_a) for Virtual A/B fallback
+        fstabEntry.blk_device = bare_partition_name + \"_a\";
+        if (!fs_mgr_update_logical_partition(&fstabEntry)) {
+            LOGINFO(\"unable to update logical partition: %s\\\\n\", twrpPart->Get_Mount_Point().c_str());
+            return false;
+        }
+        LOGINFO(\"Slot fallback: mounted %s via _a\\\\n\", bare_partition_name.c_str());
+    }'''
+if old in src:
+    src = src.replace(old, new)
+    with open('$PARTMGR', 'w') as f:
+        f.write(src)
+    print('Patched partitionmanager.cpp: slot B fallback')
+else:
+    print('Pattern not found in partitionmanager.cpp')
+"
+else
+    echo "partitionmanager.cpp already patched"
+fi
+
 # Step 4: Build
 echo ""
 echo "=== Building recovery ==="
