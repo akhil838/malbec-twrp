@@ -1,0 +1,117 @@
+#
+# Copyright (C) 2026 akhil838 (https://github.com/akhil838)
+# SPDX-License-Identifier: GPL-3.0-or-later
+#
+
+name: Build TWRP Recovery
+
+on:
+  push:
+    branches: [main]
+  pull_request:
+    branches: [main]
+  workflow_dispatch:
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    timeout-minutes: 180
+    permissions:
+      contents: write
+
+    env:
+      DEVICE_NAME: malbec
+      DEVICE_PATH: lenovo/malbec
+
+    steps:
+      - name: Cleanup
+        uses: rokibhasansagar/slimhub_actions@main
+
+      - name: Maximize build space
+        uses: easimon/maximize-build-space@master
+
+      - name: Setup ccache
+        uses: hendrikmuhs/ccache-action@v1.2
+        with:
+          create-symlink: true
+
+      - name: Setup zram
+        run: |
+          sudo apt install linux-modules-extra-$(uname -r) zram-tools -y
+          sudo modprobe zram
+          sudo sed -i 's/^#PERCENT=50/PERCENT=90/' /etc/default/zramswap
+          sudo sed -i 's/^#PRIORITY=100/PRIORITY=1000/' /etc/default/zramswap
+          sudo systemctl restart zramswap
+          zramctl
+
+      - name: Setup environment
+        run: |
+          export DEBIAN_FRONTEND=noninteractive
+          sudo apt update && sudo apt upgrade -y
+          sudo apt install repo -y
+          git config --global user.name "akhil838"
+          git config --global user.email "64255484+akhil838@users.noreply.github.com"
+
+      - name: Sync TWRP 16.0 source
+        run: |
+          repo init -u https://github.com/TWRP-Test/platform_manifest_twrp_aosp.git \
+            -b twrp-16.0 --depth=1
+          (while true; do echo "Syncing source..."; sleep 60; done) &
+          TIP_PID=$!
+          repo sync -c --no-clone-bundle --no-tags --force-sync -j$(nproc)
+          kill $TIP_PID && exit 0
+
+      - name: Checkout device tree
+        uses: actions/checkout@v4
+        with:
+          path: device/${{ env.DEVICE_PATH }}
+
+      - name: Apply TWRP source patches
+        run: |
+          for patch in device/${{ env.DEVICE_PATH }}/patches/*.patch; do
+            [ -e "$patch" ] || continue
+            if git apply --check "$patch"; then
+              git apply "$patch"
+              echo "Applied $(basename "$patch")"
+            elif git apply --reverse --check "$patch"; then
+              echo "Already applied $(basename "$patch")"
+            else
+              echo "Failed to apply $(basename "$patch")"
+              exit 1
+            fi
+          done
+
+      - name: Build recovery
+        run: |
+          source build/envsetup.sh
+          export ALLOW_MISSING_DEPENDENCIES=true
+          export CCACHE_DIR=.ccache
+          export CCACHE_EXEC=$(command -v ccache)
+          export CCACHE_MAXSIZE=5G
+          export USE_CCACHE=1
+          lunch twrp_${{ env.DEVICE_NAME }}
+          (while true; do echo "$(date +%T) Building..."; free -h; sleep 30; done) &
+          TIP_PID=$!
+          m recoveryimage
+          BUILD_DATE=$(date +%F)
+          mv out/target/product/${{ env.DEVICE_NAME }}/recovery.img \
+            out/target/product/${{ env.DEVICE_NAME }}/TWRP-3.7.1-16-${{ env.DEVICE_NAME }}-${BUILD_DATE}.img
+          echo "BUILD_DATE=${BUILD_DATE}" >> $GITHUB_ENV
+          kill $TIP_PID && exit 0
+
+      - name: Upload artifact
+        uses: actions/upload-artifact@v4
+        with:
+          name: twrp-${{ env.DEVICE_NAME }}-recovery
+          path: out/target/product/${{ env.DEVICE_NAME }}/TWRP-*.img
+          if-no-files-found: error
+
+      - name: Upload to Release
+        if: github.event_name == 'push' && github.ref == 'refs/heads/main'
+        uses: softprops/action-gh-release@v2
+        with:
+          files: out/target/product/${{ env.DEVICE_NAME }}/TWRP-*.img
+          name: TWRP-3.7.1-16-${{ env.DEVICE_NAME }}-${{ env.BUILD_DATE }}
+          tag_name: ${{ env.BUILD_DATE }}-${{ github.run_id }}
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}

@@ -1,5 +1,21 @@
 .DS_Store
 out/
+
+# IDEs
+.idea/
+.vscode/
+*.iml
+*.swp
+*.swo
+*~
+.project
+.classpath
+.settings/
+*.sublime-project
+*.sublime-workspace
+.fleet/
+.cursor/
+.claude/
 *.log
 *.tmp
 *.bak

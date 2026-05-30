@@ -27,4 +27,4 @@ lunch twrp_malbec-eng
 mka recoveryimage
 ```
 
-Prebuilt kernel, DTB, DTBO, and vendor ramdisk inputs are included under `prebuilt/`.
+Prebuilt kernel, DTB, DTBO, and vendor ramdisk extracted from the original TB390FU ROM are under `prebuilt/`.
