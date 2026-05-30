@@ -1,0 +1,26 @@
+--- a/bootable/recovery/minuitwrp/events.cpp
++++ b/bootable/recovery/minuitwrp/events.cpp
+@@ -419,6 +419,21 @@ static int vk_tp_to_screen(struct position *p, int *x, int *y)
+ #endif
+
+ #ifndef RECOVERY_TOUCHSCREEN_SWAP_XY
++    /* Auto-detect portrait touch on landscape display and transform */
++    if (p->xi.maximum < p->yi.maximum && gr_fb_width() > gr_fb_height()) {
++        int fb_width = gr_fb_width();
++        int fb_height = gr_fb_height();
++
++        *x = (p->y - p->yi.minimum) * (fb_width - 1) / (p->yi.maximum - p->yi.minimum);
++        *y = (p->x - p->xi.minimum) * (fb_height - 1) / (p->xi.maximum - p->xi.minimum);
++
++        /* Flip X axis to match display orientation */
++        *x = fb_width - 1 - *x;
++
++        if (*x >= 0 && *x < fb_width &&
++            *y >= 0 && *y < fb_height)
++            return 0;
++        return 1;
++    }
++
+     int fb_width = gr_fb_width();
+     int fb_height = gr_fb_height();
+ #else

@@ -7,10 +7,10 @@
 # Dynamic Partitions (super)
 system          ext4    /dev/block/mapper/system                     flags=display="System";logical;slotselect
 system_ext      ext4    /dev/block/mapper/system_ext                 flags=display="System EXT";logical;slotselect
-vendor          ext4    /dev/block/mapper/vendor                     flags=display="Vendor";logical;slotselect
+vendor          ext4    /dev/block/mapper/vendor                     flags=display="Vendor";logical;slotselect;first_stage_mount
 product         ext4    /dev/block/mapper/product                    flags=display="Product";logical;slotselect
 odm             ext4    /dev/block/mapper/odm                        flags=display="ODM";logical;slotselect
-vendor_dlkm     ext4    /dev/block/mapper/vendor_dlkm                flags=display="Vendor DLKM";logical;slotselect
+vendor_dlkm     ext4    /dev/block/mapper/vendor_dlkm                flags=display="Vendor DLKM";logical;slotselect;first_stage_mount
 
 # Physical Partitions
 /boot           emmc    /dev/block/bootdevice/by-name/boot           flags=display="Boot";slotselect;backup=1
@@ -27,7 +27,7 @@ vendor_dlkm     ext4    /dev/block/mapper/vendor_dlkm                flags=displ
 /metadata       ext4    /dev/block/bootdevice/by-name/metadata        flags=display="Metadata"
 
 # Userdata
-/data           f2fs    /dev/block/bootdevice/by-name/userdata        flags=display="Data";fileencryption=aes-256-xts:aes-256-cts:v2+inlinecrypt_optimized,metadata_encryption=aes-256-xts:wrappedkey_v0,keydirectory=/metadata/vold/metadata_encryption
+/data           f2fs    /dev/block/bootdevice/by-name/userdata        flags=display="Data"
 
 # External storage
 /sdcard1        auto    /dev/block/mmcblk0p1                          flags=display="MicroSD";storage;wipeingui;removable

@@ -111,12 +111,12 @@ BOARD_HAS_LARGE_FILESYSTEM := true
 TARGET_RECOVERY_PIXEL_FORMAT := RGBX_8888
 TARGET_RECOVERY_FSTAB := $(DEVICE_PATH)/recovery.fstab
 
-# Crypto
-TW_INCLUDE_CRYPTO := true
-TW_INCLUDE_CRYPTO_FBE := true
-TW_INCLUDE_FBE_METADATA_DECRYPT := true
-BOARD_USES_QCOM_FBE_DECRYPTION := true
-BOARD_USES_METADATA_PARTITION := true
+# Crypto — fully disabled for bring-up (decryption hangs without HALs)
+# TODO: re-enable with proper keymaster/OMAPI support
+#TW_INCLUDE_CRYPTO := true
+#TW_INCLUDE_CRYPTO_FBE := true
+#BOARD_USES_QCOM_FBE_DECRYPTION := true
+#BOARD_USES_METADATA_PARTITION := true
 TW_USE_FSCRYPT_POLICY := 2
 PLATFORM_VERSION := 99.87.36
 PLATFORM_VERSION_LAST_STABLE := $(PLATFORM_VERSION)
@@ -133,7 +133,7 @@ TW_INCLUDE_LIBRESETPROP := true
 TW_INCLUDE_FASTBOOTD := true
 
 # TWRP Configuration
-TW_THEME := portrait_hdpi
+TW_THEME := landscape_hdpi
 TW_FRAMERATE := 120
 RECOVERY_SDCARD_ON_DATA := true
 TARGET_RECOVERY_QCOM_RTC_FIX := true
@@ -152,11 +152,12 @@ TW_SCREEN_BLANK_ON_BOOT := false
 TW_EXCLUDE_APEX := true
 TW_USE_SERIALNO_PROPERTY_FOR_DEVICE_ID := true
 
-# Display (13" 3K)
+# Display (13" 3.5K landscape)
 TW_Y_OFFSET := 0
 TW_H_OFFSET := 0
-DEVICE_SCREEN_WIDTH := 2880
-DEVICE_SCREEN_HEIGHT := 1800
+DEVICE_SCREEN_WIDTH := 3504
+DEVICE_SCREEN_HEIGHT := 2190
+TW_ROTATION := 0
 
 # USB
 TARGET_USE_CUSTOM_LUN_FILE_PATH := /config/usb_gadget/g1/functions/mass_storage.usb0/lun.%d/file
@@ -164,6 +165,10 @@ TARGET_USE_CUSTOM_LUN_FILE_PATH := /config/usb_gadget/g1/functions/mass_storage.
 # Debug
 TARGET_USES_LOGD := true
 TWRP_INCLUDE_LOGCAT := true
+TWRP_EVENT_LOGGING := true
 
-# Vendor modules
+# Vendor modules — baked into recovery ramdisk at recovery/root/vendor/lib/modules/
+# Touch: nvt_touch | USB: dwc3-msm + PHY + gadget | Display: msm_drm
+TW_LOAD_VENDOR_MODULES := "*"
 TW_LOAD_VENDOR_MODULES_EXCLUDE_GKI := true
+TW_LOAD_PREBUILT_MODULES_AT_FIRST := true

@@ -35,7 +35,46 @@ if [ ! -d "$TWRP_DIR/$DEVICE_PATH" ]; then
     exit 1
 fi
 
-# Step 3: Build
+# Step 3: Apply source patches
+echo ""
+echo "=== Applying source patches ==="
+cd "$TWRP_DIR"
+for patch in "$TWRP_DIR/$DEVICE_PATH"/patches/*.patch; do
+    [ -e "$patch" ] || continue
+    if git apply --check "$patch" 2>/dev/null; then
+        git apply "$patch"
+        echo "Applied $(basename "$patch")"
+    elif git apply --reverse --check "$patch" 2>/dev/null; then
+        echo "Already applied $(basename "$patch")"
+    else
+        echo "WARN: Skipping $(basename "$patch")"
+    fi
+done
+
+# Step 3b: Patch portrait-touch-to-landscape-display in events.cpp
+EVENTS="$TWRP_DIR/bootable/recovery/minuitwrp/events.cpp"
+if ! grep -q "portrait touch" "$EVENTS"; then
+    sed -i '/#ifndef RECOVERY_TOUCHSCREEN_SWAP_XY/{
+a\    /* Auto-detect portrait touch on landscape display and transform */\
+    if (p->xi.maximum < p->yi.maximum \&\& gr_fb_width() > gr_fb_height()) {\
+        int fb_width = gr_fb_width();\
+        int fb_height = gr_fb_height();\
+        *x = (p->y - p->yi.minimum) * (fb_width - 1) / (p->yi.maximum - p->yi.minimum);\
+        *y = (p->x - p->xi.minimum) * (fb_height - 1) / (p->xi.maximum - p->xi.minimum);\
+        /* Flip X axis to match display orientation */\
+        *x = fb_width - 1 - *x;\
+        if (*x >= 0 \&\& *x < fb_width \&\&\
+            *y >= 0 \&\& *y < fb_height)\
+            return 0;\
+        return 1;\
+    }
+}' "$EVENTS"
+    echo "Patched events.cpp: portrait touch to landscape display"
+else
+    echo "events.cpp already patched"
+fi
+
+# Step 4: Build
 echo ""
 echo "=== Building recovery ==="
 cd "$TWRP_DIR"
@@ -49,7 +88,7 @@ ccache -M 10G 2>/dev/null || true
 lunch twrp_$DEVICE
 m recoveryimage -j$(nproc)
 
-# Step 4: Copy output
+# Step 5: Copy output
 BUILD_DATE=$(date +%F)
 OUT_IMG="out/target/product/$DEVICE/recovery.img"
 FINAL_NAME="TWRP-3.7.1_16-$DEVICE-$BUILD_DATE.img"

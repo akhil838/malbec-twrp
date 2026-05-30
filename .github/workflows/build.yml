@@ -66,6 +66,21 @@ jobs:
         with:
           path: device/${{ env.DEVICE_PATH }}
 
+      - name: Apply TWRP source patches
+        run: |
+          for patch in device/${{ env.DEVICE_PATH }}/patches/*.patch; do
+            [ -e "$patch" ] || continue
+            if git apply --check "$patch"; then
+              git apply "$patch"
+              echo "Applied $(basename "$patch")"
+            elif git apply --reverse --check "$patch"; then
+              echo "Already applied $(basename "$patch")"
+            else
+              echo "Failed to apply $(basename "$patch")"
+              exit 1
+            fi
+          done
+
       - name: Build recovery
         run: |
           source build/envsetup.sh

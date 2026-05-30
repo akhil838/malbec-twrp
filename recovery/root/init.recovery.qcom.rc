@@ -1,0 +1,16 @@
+# Copyright (C) 2026 akhil838 (https://github.com/akhil838)
+# SPDX-License-Identifier: GPL-3.0-or-later
+
+import /init.recovery.usb.rc
+
+on init
+    setprop prepdecrypt.setpatch true
+
+on fs
+    wait /dev/block/platform/soc/${ro.boot.bootdevice}
+    symlink /dev/block/platform/soc/${ro.boot.bootdevice} /dev/block/bootdevice
+    write /proc/sys/kernel/firmware_config/force_sysfs_fallback 1
+    install_keyring
+
+on boot
+    setprop sys.usb.config adb
