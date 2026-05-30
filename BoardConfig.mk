@@ -111,12 +111,12 @@ BOARD_HAS_LARGE_FILESYSTEM := true
 TARGET_RECOVERY_PIXEL_FORMAT := RGBX_8888
 TARGET_RECOVERY_FSTAB := $(DEVICE_PATH)/recovery.fstab
 
-# Crypto — fully disabled for bring-up (decryption hangs without HALs)
-# TODO: re-enable with proper keymaster/OMAPI support
-#TW_INCLUDE_CRYPTO := true
-#TW_INCLUDE_CRYPTO_FBE := true
+# Crypto — basic FBE without QCOM decrypt (avoids hang)
+TW_INCLUDE_CRYPTO := true
+TW_INCLUDE_CRYPTO_FBE := true
 #BOARD_USES_QCOM_FBE_DECRYPTION := true
-#BOARD_USES_METADATA_PARTITION := true
+BOARD_USES_METADATA_PARTITION := true
+TW_SKIP_ADDITIONAL_FSTAB := true
 TW_USE_FSCRYPT_POLICY := 2
 PLATFORM_VERSION := 99.87.36
 PLATFORM_VERSION_LAST_STABLE := $(PLATFORM_VERSION)

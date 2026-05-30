@@ -4,12 +4,18 @@
 # Android fstab file for Lenovo IdeaTab Pro Gen 2 (malbec / TB390FU)
 # mount_point   fstype  device                                      flags
 
-# Dynamic Partitions (super)
-system          ext4    /dev/block/mapper/system                     flags=display="System";logical;slotselect
-system_ext      ext4    /dev/block/mapper/system_ext                 flags=display="System EXT";logical;slotselect
+# Dynamic Partitions (super) — dual erofs/ext4 entries
+system          erofs   /dev/block/mapper/system                     flags=display="System";logical;slotselect;first_stage_mount
+system          ext4    /dev/block/mapper/system                     flags=display="System";logical;slotselect;first_stage_mount
+system_ext      erofs   /dev/block/mapper/system_ext                 flags=display="System EXT";logical;slotselect;first_stage_mount
+system_ext      ext4    /dev/block/mapper/system_ext                 flags=display="System EXT";logical;slotselect;first_stage_mount
+vendor          erofs   /dev/block/mapper/vendor                     flags=display="Vendor";logical;slotselect;first_stage_mount
 vendor          ext4    /dev/block/mapper/vendor                     flags=display="Vendor";logical;slotselect;first_stage_mount
-product         ext4    /dev/block/mapper/product                    flags=display="Product";logical;slotselect
-odm             ext4    /dev/block/mapper/odm                        flags=display="ODM";logical;slotselect
+product         erofs   /dev/block/mapper/product                    flags=display="Product";logical;slotselect;first_stage_mount
+product         ext4    /dev/block/mapper/product                    flags=display="Product";logical;slotselect;first_stage_mount
+odm             erofs   /dev/block/mapper/odm                        flags=display="ODM";logical;slotselect;first_stage_mount
+odm             ext4    /dev/block/mapper/odm                        flags=display="ODM";logical;slotselect;first_stage_mount
+vendor_dlkm     erofs   /dev/block/mapper/vendor_dlkm                flags=display="Vendor DLKM";logical;slotselect;first_stage_mount
 vendor_dlkm     ext4    /dev/block/mapper/vendor_dlkm                flags=display="Vendor DLKM";logical;slotselect;first_stage_mount
 
 # Physical Partitions
@@ -24,7 +30,7 @@ vendor_dlkm     ext4    /dev/block/mapper/vendor_dlkm                flags=displ
 /bluetooth      emmc    /dev/block/bootdevice/by-name/bluetooth      flags=display="Bluetooth";slotselect;backup=1
 /dsp            emmc    /dev/block/bootdevice/by-name/dsp            flags=display="DSP";slotselect;backup=1
 /persist        ext4    /dev/block/bootdevice/by-name/persist         flags=display="Persist";backup=1
-/metadata       ext4    /dev/block/bootdevice/by-name/metadata        flags=display="Metadata"
+/metadata       f2fs    /dev/block/bootdevice/by-name/metadata        flags=display="Metadata";wrappedkey
 
 # Userdata
 /data           f2fs    /dev/block/bootdevice/by-name/userdata        flags=display="Data"

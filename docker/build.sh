@@ -61,8 +61,8 @@ a\    /* Auto-detect portrait touch on landscape display and transform */\
         int fb_height = gr_fb_height();\
         *x = (p->y - p->yi.minimum) * (fb_width - 1) / (p->yi.maximum - p->yi.minimum);\
         *y = (p->x - p->xi.minimum) * (fb_height - 1) / (p->xi.maximum - p->xi.minimum);\
-        /* Flip X axis to match display orientation */\
-        *x = fb_width - 1 - *x;\
+        /* Flip Y axis to match display orientation */\
+        *y = fb_height - 1 - *y;\
         if (*x >= 0 \&\& *x < fb_width \&\&\
             *y >= 0 \&\& *y < fb_height)\
             return 0;\
@@ -93,13 +93,44 @@ BUILD_DATE=$(date +%F)
 OUT_IMG="out/target/product/$DEVICE/recovery.img"
 FINAL_NAME="TWRP-3.7.1_16-$DEVICE-$BUILD_DATE.img"
 
-if [ -f "$OUT_IMG" ]; then
-    cp "$OUT_IMG" "/output/$FINAL_NAME"
-    echo ""
-    echo "=== BUILD SUCCESS ==="
-    echo "Output: /output/$FINAL_NAME"
-    ls -lh "/output/$FINAL_NAME"
-else
+if [ ! -f "$OUT_IMG" ]; then
     echo "=== BUILD FAILED — no recovery.img ==="
     exit 1
 fi
+
+# Step 6: Inject init RC files and firmware via magiskboot
+echo ""
+echo "=== Injecting init RC files and firmware ==="
+cd /tmp
+
+# Get magiskboot
+if [ ! -x /tmp/magiskboot ]; then
+    apt-get update -qq >/dev/null 2>&1 && apt-get install -y -qq wget unzip >/dev/null 2>&1
+    wget -q "https://github.com/topjohnwu/Magisk/releases/download/v30.7/Magisk-v30.7.apk" -O /tmp/m.apk
+    unzip -o /tmp/m.apk "lib/x86_64/libmagiskboot.so" >/dev/null 2>&1
+    cp lib/x86_64/libmagiskboot.so /tmp/magiskboot && chmod +x /tmp/magiskboot
+fi
+
+./magiskboot unpack "$TWRP_DIR/$OUT_IMG" 2>&1 | grep RAMDISK
+
+# Inject init.recovery RC files
+for rc in "$TWRP_DIR/$DEVICE_PATH"/recovery/root/init.recovery.*.rc; do
+    [ -e "$rc" ] || continue
+    ./magiskboot cpio ramdisk.cpio "add 0644 $(basename $rc) $rc"
+    echo "  Added $(basename $rc)"
+done
+
+# Inject touch firmware
+for fw in "$TWRP_DIR/$DEVICE_PATH"/recovery/root/lib/firmware/*.bin; do
+    [ -e "$fw" ] || continue
+    ./magiskboot cpio ramdisk.cpio "add 0644 lib/firmware/$(basename $fw) $fw" 2>/dev/null
+    echo "  Added lib/firmware/$(basename $fw)"
+done
+
+# Repack
+./magiskboot repack "$TWRP_DIR/$OUT_IMG" "/output/$FINAL_NAME" 2>&1 | grep RAMDISK
+
+echo ""
+echo "=== BUILD SUCCESS ==="
+echo "Output: /output/$FINAL_NAME"
+ls -lh "/output/$FINAL_NAME"
